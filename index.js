@@ -1,11 +1,11 @@
+require('dotenv-safe').config();
 const fs = require('fs');
 const readline = require('readline');
 const { google } = require('googleapis');
-
 const SCOPES = ['https://www.googleapis.com/auth/drive.metadata.readonly', 'https://www.googleapis.com/auth/drive', 'https://www.googleapis.com/auth/drive.file'];
 const TOKEN_PATH = 'token.json';
 
-fs.readFile('credentials.json', (err, content) => {
+fs.readFile(process.env.DRIVE_CREDENTIALS_FILE,'utf-8', (err, content) => {
     if (err) return console.log('Error loading client secret file:', err);
     authorize(JSON.parse(content), listFiles);
 });
@@ -17,7 +17,8 @@ fs.readFile('credentials.json', (err, content) => {
  * @param {function} callback The callback to call with the authorized client.
  */
 function authorize(credentials, callback) {
-    const { client_secret, client_id, redirect_uris } = credentials.installed;
+    console.log(credentials)
+    const { client_secret, client_id, redirect_uris } = credentials;
     const oAuth2Client = new google.auth.OAuth2(
         client_id, client_secret, redirect_uris[0]);
 
@@ -67,7 +68,7 @@ function listFiles(auth) {
     const drive = google.drive({ version: 'v3', auth });
     drive.files.list({
         pageSize: 10,
-        q: "'1XrqMaIRfWKvRaBIZBUR9HOxvorIUjv1f' in parents",
+        q: `'${process.env.DRIVE_FOLDER_ID}' in parents`,
         fields: 'nextPageToken, files(id, name)',
     }, (err, res) => {
         if (err) return console.log('The API returned an error: ' + err);
